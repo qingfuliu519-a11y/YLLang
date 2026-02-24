@@ -1,6 +1,8 @@
 #ifndef YLLANG_DISTRIBUTED_INFO_H_
 #define YLLANG_DISTRIBUTED_INFO_H_
 
+#include "cuda/LaunchKernel.cuh"
+
 namespace yllang {
 class DistributedInfo {
  public:

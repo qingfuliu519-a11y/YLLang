@@ -1,0 +1,6 @@
+Model:
+  path: "none"
+
+KVCache:
+  ThreadsPreBlock: 128
+  Type: "float32"
