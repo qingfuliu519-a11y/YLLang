@@ -3,6 +3,7 @@
 
 #include <torch/torch.h>
 #include <vector>
+#include "config/config.h"
 #include "distributed/info.h"
 #include "kvcache/base_kvcache.h"
 #include "kvcache/store_kv_cache.cuh"
@@ -31,18 +32,22 @@ class MHAKVCache : public BaseKVCache {
     m_view_shape_ = {m_num_pages_, m_num_local_kv_heads_, m_head_dim_};
   }
 
-  auto StoreKV(torch::Tensor k, torch::Tensor v, torch::Tensor loc, int layer_id) -> torch::Tensor override {
-    // TODO
-    return torch::empty({});
+  auto StoreKV(torch::Tensor k, torch::Tensor v, torch::Tensor loc, int layer_id) -> void override {
+    auto k_cache = KCache(layer_id);
+    auto k_view = k_cache.view({m_num_pages_, -1});
+
+    auto v_cache = VCache(layer_id);
+    auto v_view = v_cache.view({m_num_pages_, -1});
+    StoreKVCache<kElementSize>(k, v, k_view, v_view, loc);
   }
 
-  inline auto KCache(int layer_id) -> torch::Tensor override { return m_k_buffer_[layer_id]; }
+  auto KCache(const int layer_id) -> torch::Tensor override { return m_k_buffer_[layer_id]; }
 
-  inline auto VCache(int layer_id) -> torch::Tensor override { return m_v_buffer_[layer_id]; }
+  auto VCache(const int layer_id) -> torch::Tensor override { return m_v_buffer_[layer_id]; }
 
-  inline auto NumLayers() -> int override { return m_num_layers_; }
+  auto NumLayers() -> int override { return m_num_layers_; }
 
-  inline auto Device() -> torch::Device override { return m_device_; }
+  auto Device() -> torch::Device override { return m_device_; }
 
  private:
   torch::Tensor m_buffer_;

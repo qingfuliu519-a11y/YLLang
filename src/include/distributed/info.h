@@ -1,12 +1,10 @@
 #ifndef YLLANG_DISTRIBUTED_INFO_H_
 #define YLLANG_DISTRIBUTED_INFO_H_
 
-#include "cuda/LaunchKernel.cuh"
-
 namespace yllang {
 class DistributedInfo {
  public:
-  DistributedInfo(int rank, int size) noexcept : m_rank_(rank), m_size_(size) {}
+  DistributedInfo(const int rank, int size) noexcept : m_rank_(rank), m_size_(size) {}
 
   auto GetRank() const -> int { return m_rank_; }
   auto GetSize() const -> int { return m_size_; }

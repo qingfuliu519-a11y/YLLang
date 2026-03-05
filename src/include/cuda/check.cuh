@@ -4,19 +4,18 @@
 #include <source_location>
 #include <sstream>
 #include <utility>
-#include "copy.cuh"
 #include "util/panic.h"
 namespace yllang {
 
-auto inline CUDA_CHECK(cudaError_t error, std::source_location location = std::source_location::current()) -> void {
+auto inline CudaCheck(cudaError_t error, std::source_location location = std::source_location::current()) -> void {
   if (error != ::cudaSuccess) {
     [[unlikely]];
-    Panic(std::move(location), "CUDA Error: ", ::cudaGetErrorString(error));
+    Panic(location, "CUDA Error: ", ::cudaGetErrorString(error));
   }
 }
 
-auto inline CUDA_CHECK(std::source_location location = std::source_location::current()) -> void {
-  CUDA_CHECK(::cudaGetLastError(), std::move(location));
+auto inline CudaCheck(std::source_location location = std::source_location::current()) -> void {
+  CudaCheck(::cudaGetLastError(), location);
 }
 
 }  // namespace yllang

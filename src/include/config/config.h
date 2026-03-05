@@ -7,9 +7,9 @@
 
 namespace yllang {
 
-constexpr int kKvcacheThreadspreblock = 128;
-constexpr std::string kKvcacheType = "float32";
-constexpr std::string kModelPath = "none";
+constexpr int kElementSize = 128 * 32;
+constexpr int kThreadsPreBlock = 128;
+constexpr int kThreadsPreWrap = 32;
 
 } // namespace yllang
 

@@ -1,6 +1,9 @@
 ﻿cmake_minimum_required(VERSION 3.12)
 project(YLLang LANGUAGES CXX CUDA)
 
+# Enable generation of compile_commands.json (for clang-tidy)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Enable MSVC hot reload if policy supports it
 if (POLICY CMP0141)
     cmake_policy(SET CMP0141 NEW)
@@ -13,9 +16,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-
-# Enable generation of compile_commands.json (for clang-tidy)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CUDA_STANDARD 20)
+set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+set(CMAKE_CUDA_ARCHITECTURES native)
 
 # Find clang-format and clang-tidy executables
 find_program(CLANG_FORMAT NAMES clang-format)
@@ -90,45 +93,43 @@ endif ()
 # builds). A custom target is also provided for manual regeneration.
 # ----------------------------------------------------------------------
 
-# Find Python interpreter (required)
-find_package(Python3 REQUIRED)
-# Paths to script, input YAML, and output header
-set(RESOLVE_CONFIG_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/scripts/resolve_config.py)
-set(RESOLVE_CONFIG_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/config/config.yaml)
-set(RESOLVE_CONFIG_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/include/config/config.h)
-
-# Ensure output directory exists (CMake configure-time)
-get_filename_component(RESOLVE_CONFIG_OUTPUT_DIR ${RESOLVE_CONFIG_OUTPUT} DIRECTORY)
-file(MAKE_DIRECTORY ${RESOLVE_CONFIG_OUTPUT_DIR})
-
-# --- Configure-time generation ---
-# Run the script immediately during cmake configuration so that config.h exists
-# for the rest of the configure process and for the build.
-message(STATUS "Generating config.h with command: ${Python3_EXECUTABLE} ${RESOLVE_CONFIG_SCRIPT} ${RESOLVE_CONFIG_INPUT} ${RESOLVE_CONFIG_OUTPUT}")
-execute_process(
-        COMMAND ${Python3_EXECUTABLE} ${RESOLVE_CONFIG_SCRIPT} ${RESOLVE_CONFIG_INPUT} ${RESOLVE_CONFIG_OUTPUT}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        RESULT_VARIABLE CONFIG_GEN_RESULT
-)
-message("CONFIG_GEN_RESULT:${CONFIG_GEN_RESULT}")
-if (NOT CONFIG_GEN_RESULT EQUAL 0)
-    message(FATAL_ERROR "Failed to generate config.h from config.yaml. Check your Python script and YAML file.")
-endif ()
+## Find Python interpreter (required)
+#find_package(Python3 REQUIRED)
+## Paths to script, input YAML, and output header
+#set(RESOLVE_CONFIG_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/scripts/resolve_config.py)
+#set(RESOLVE_CONFIG_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/config/config.yaml)
+#set(RESOLVE_CONFIG_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/include/config/config.h)
+#
+## Ensure output directory exists (CMake configure-time)
+#get_filename_component(RESOLVE_CONFIG_OUTPUT_DIR ${RESOLVE_CONFIG_OUTPUT} DIRECTORY)
+#file(MAKE_DIRECTORY ${RESOLVE_CONFIG_OUTPUT_DIR})
+#
+## --- Configure-time generation ---
+## Run the script immediately during cmake configuration so that config.h exists
+## for the rest of the configure process and for the build.
+#message(STATUS "Generating config.h with command: ${Python3_EXECUTABLE} ${RESOLVE_CONFIG_SCRIPT} ${RESOLVE_CONFIG_INPUT} ${RESOLVE_CONFIG_OUTPUT}")
+#execute_process(
+#        COMMAND ${Python3_EXECUTABLE} ${RESOLVE_CONFIG_SCRIPT} ${RESOLVE_CONFIG_INPUT} ${RESOLVE_CONFIG_OUTPUT}
+#        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#        RESULT_VARIABLE CONFIG_GEN_RESULT
+#)
+#message("CONFIG_GEN_RESULT:${CONFIG_GEN_RESULT}")
+#if (NOT CONFIG_GEN_RESULT EQUAL 0)
+#    message(FATAL_ERROR "Failed to generate config.h from config.yaml. Check your Python script and YAML file.")
+#endif ()
 
 # Custom command to generate the header
-add_custom_command(
-        OUTPUT ${RESOLVE_CONFIG_OUTPUT}
-        COMMAND Python3::Interpreter ${RESOLVE_CONFIG_SCRIPT} ${RESOLVE_CONFIG_INPUT} ${RESOLVE_CONFIG_OUTPUT}
-        DEPENDS ${RESOLVE_CONFIG_SCRIPT} ${RESOLVE_CONFIG_INPUT}
-        COMMENT "Generating config.h from config.yaml"
-)
+#add_custom_command(
+#        OUTPUT ${RESOLVE_CONFIG_OUTPUT}
+#        COMMAND Python3::Interpreter ${RESOLVE_CONFIG_SCRIPT} ${RESOLVE_CONFIG_INPUT} ${RESOLVE_CONFIG_OUTPUT}
+#        DEPENDS ${RESOLVE_CONFIG_SCRIPT} ${RESOLVE_CONFIG_INPUT}
+#        COMMENT "Generating config.h from config.yaml"
+#)
 
 # Custom target that depends on the generated file, marked ALL so it runs on every build
 add_custom_target(resolve_config ALL
         DEPENDS ${RESOLVE_CONFIG_OUTPUT}
 )
-
-
 
 # ----------------------------------------------------------------------
 # Setup: LibTorch (PyTorch C++ API)
@@ -146,37 +147,38 @@ include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
 )
 add_subdirectory(3rdparty)
-list(APPEND CMAKE_PREFIX_PATH ${TVM_FFI_DIR})
-message("${TVM_FFI_CMAKE_DIR}")
-find_package(tvm_ffi CONFIG REQUIRED)
+
 
 file(GLOB_RECURSE YLLang_SOURCE_FILES
         LIST_DIRECTORIES false
         CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hxx"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hh"
-        "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cu"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cuh"
 )
-# Define the executable
-add_executable(YLLang ${YLLang_SOURCE_FILES})
 
+# Define the library
+add_library(YLLANG_Lib ${YLLang_SOURCE_FILES})
 # Link Torch libraries (using imported targets automatically handles include/link directories)
-target_link_libraries(YLLang PRIVATE ${TORCH_LIBRARIES})
+target_link_libraries(YLLANG_Lib PRIVATE ${TORCH_LIBRARIES} CUDA::cudart)
 
-tvm_ffi_configure_target(
-        YLLang
-)
+set_target_properties(YLLANG_Lib PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+# Define the executable
+add_executable(YLLANG "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
+# Link Torch libraries (using imported targets automatically handles include/link directories)
+target_link_libraries(YLLANG PRIVATE ${TORCH_LIBRARIES} CUDA::cudart YLLANG_Lib)
+
+set_target_properties(YLLANG PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 # On Windows/MSVC, copy Torch DLLs to the output directory after build
 file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
-add_custom_command(TARGET YLLang POST_BUILD
+add_custom_command(TARGET YLLANG POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${TORCH_DLLS}
-        $<TARGET_FILE_DIR:YLLang>
+        $<TARGET_FILE_DIR:YLLANG>
         COMMENT "Copying Torch DLLs to output directory"
 )
+
+add_subdirectory(test)
