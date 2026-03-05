@@ -1,7 +1,6 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 #include <iostream>
-
 #include "kvcache/mha_kvcache.h"
 
 void TestLibtorchVersion() {
@@ -17,6 +16,8 @@ void TestLibtorchVersion() {
   }
   auto count = static_cast<int>(torch::cuda::device_count());
   std::cout << "Device count count count count: " << count << "\n";
+  size_t float32_size = torch::elementSize(torch::kFloat32);
+  std::cout << "Size of torch::kFloat32: " << float32_size << " bytes" << std::endl; // 输出 4
 }
 
 auto main(int p, char **v) -> int {

@@ -46,7 +46,7 @@ class StoreKernelParams {
  * @param params             Kernel parameter structure
  */
 template <size_t kElementSize, size_t kThreadsPreBlock, std::integral T, bool kUsePDL>
-__device__ auto StoreKVCacheKernel(const __grid_constant__ StoreKernelParams params) -> void {
+__global__ auto StoreKVCacheKernel(const __grid_constant__ StoreKernelParams params) -> void {
   // Number of warps per block
   constexpr auto kWarpsPreBlock =
       kThreadsPreBlock / kThreadsPreWrap;  // kThreadsPreWrap is typically 32, defined elsewhere
@@ -96,7 +96,7 @@ __device__ auto StoreKVCacheKernel(const __grid_constant__ StoreKernelParams par
  * @param indices            Indices tensor
  */
 template <size_t kElementSize, size_t kThreadsPreBlock = 128, bool kUsePDL = false>
-__global__ auto StoreKVCache(const torch::Tensor k, const torch::Tensor v, const torch::Tensor k_cache,
+auto StoreKVCache(const torch::Tensor k, const torch::Tensor v, const torch::Tensor k_cache,
                              const torch::Tensor v_cache, const torch::Tensor indices) -> void {
   // Symbolic variables used to match tensor shapes and attributes (defined in util/tensor.h)
   SymbolicSize s_kv_size{};       // Represents the inner size dimension of each element
@@ -130,7 +130,7 @@ __global__ auto StoreKVCache(const torch::Tensor k, const torch::Tensor v, const
   bool use_int_32 = (32 == indices_type.UnWrap().itemsize());
 
   // Retrieve the actual length value
-  auto length = s_length.UnWrap();
+  auto length = s_kv_size.UnWrap();
 
   // Get the byte size of the K/V data type
   auto kv_dtype_size = s_kv_dtype.UnWrap().itemsize();

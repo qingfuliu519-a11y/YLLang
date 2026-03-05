@@ -20,25 +20,28 @@ class MHAKVCache : public BaseKVCache {
     auto options = torch::TensorOptions().device(device).dtype(dtype);
     switch (kv_layout) {
       case KVCacheLayout::kLayerFirst:
-        m_buffer_ = torch::zeros({2, m_num_layers_, m_num_pages_, m_num_local_kv_heads_, m_head_dim_}, options)
-                        .permute({0, 2, 1, 3, 4});
+        m_buffer_ = torch::zeros({2, m_num_layers_, m_num_pages_, m_num_local_kv_heads_, m_head_dim_}, options);
+        break;
       case KVCacheLayout::kPageFirst:
-        m_buffer_ = torch::zeros({2, m_num_pages_, m_num_layers_, m_num_local_kv_heads_, m_head_dim_}, options);
+        m_buffer_ = torch::zeros({2, m_num_pages_, m_num_layers_, m_num_local_kv_heads_, m_head_dim_}, options)
+                        .permute({0, 2, 1, 3, 4});
+        break;
       default:
         throw std::logic_error("no such KVCacheLayout");
     }
+    m_buffer_ = m_buffer_.view({2, m_num_layers_, m_num_pages_, m_page_size_, m_num_local_kv_heads_, m_head_dim_});
     m_k_buffer_ = m_buffer_[0];
     m_v_buffer_ = m_buffer_[1];
-    m_view_shape_ = {m_num_pages_, m_num_local_kv_heads_, m_head_dim_};
+    m_view_shape_ = {m_num_pages_ * m_page_size_, -1};
   }
 
   auto StoreKV(torch::Tensor k, torch::Tensor v, torch::Tensor loc, int layer_id) -> void override {
     auto k_cache = KCache(layer_id);
-    auto k_view = k_cache.view({m_num_pages_, -1});
+    auto k_view = k_cache.view(m_view_shape_);
 
     auto v_cache = VCache(layer_id);
-    auto v_view = v_cache.view({m_num_pages_, -1});
-    StoreKVCache<kElementSize>(k, v, k_view, v_view, loc);
+    auto v_view = v_cache.view(m_view_shape_);
+    StoreKVCache<kElementSize>(k.view({loc.size(0), -1}), v.view({loc.size(0), -1}), k_view, v_view, loc);
   }
 
   auto KCache(const int layer_id) -> torch::Tensor override { return m_k_buffer_[layer_id]; }
@@ -59,6 +62,7 @@ class MHAKVCache : public BaseKVCache {
   int m_num_pages_;
   int m_num_local_kv_heads_;
   int m_head_dim_;
+  int m_page_size_{1};
   torch::Device m_device_;
 };
 }  // namespace yllang

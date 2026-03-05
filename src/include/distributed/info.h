@@ -17,7 +17,7 @@ class DistributedInfo {
   int m_size_;
 };
 
-inline static thread_local DistributedInfo distributed_info(0, 0);
+inline static thread_local DistributedInfo distributed_info(0, 1);
 
 inline auto SetDistributedInfo(int rank, int size) -> void {
   distributed_info.SetRank(rank);

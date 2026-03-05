@@ -139,15 +139,18 @@ add_custom_target(resolve_config ALL
 # Finally, adds the necessary include directories for LibTorch headers
 # and the project's own src/include directory.
 # ----------------------------------------------------------------------
-set(TORCH_INSTALL_DIR "D:/libtorch" CACHE PATH "Path to the LibTorch installation (e.g., where lib/ and include/ are located)")
+set(TORCH_INSTALL_DIR "E:/libtorch/debug" CACHE PATH "Path to the LibTorch installation (e.g., where lib/ and include/ are located)")
 find_package(Torch REQUIRED PATHS ${TORCH_INSTALL_DIR} NO_DEFAULT_PATH)
 include_directories(
         ${TORCH_INSTALL_DIR}/include
         ${TORCH_INSTALL_DIR}/include/torch/csrc/api/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
 )
-add_subdirectory(3rdparty)
 
+#add_subdirectory(3rdparty)
+#TODO
+include_directories($ENV{VSINCLUDE})
+link_directories($ENV{VSLIB})
 
 file(GLOB_RECURSE YLLang_SOURCE_FILES
         LIST_DIRECTORIES false

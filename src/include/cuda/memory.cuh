@@ -70,7 +70,7 @@ __device__ inline auto Copy(void *__restrict__ dst, const void *__restrict__ src
   const auto dst_package = static_cast<Package *>(dst);
   const auto lane_id = threadIdx.x % K_THREADS_PRE_WRAP;
 
-#pragma unroll kLoopCount
+#pragma unroll k_loop_count
   for (size_t i = 0; i < k_loop_count; ++i) {
     auto pos = (i * threadIdx.x) + lane_id;
     dst_package[pos] = src_package[pos];

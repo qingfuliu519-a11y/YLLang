@@ -7,7 +7,7 @@
 
 namespace yllang {
 
-constexpr int kElementSize = 128 * 32;
+constexpr int kElementSize = 8 * 64 * 4;
 constexpr int kThreadsPreBlock = 128;
 constexpr int kThreadsPreWrap = 32;
 

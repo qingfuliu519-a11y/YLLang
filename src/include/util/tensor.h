@@ -147,7 +147,7 @@ class TensorMatcher {
   }
 
   auto WithDType(SymbolicDType &dtype) && -> TensorMatcher && {
-    InitDevice();
+    InitType();
     m_dtype_.Rebind(dtype);
     return std::move(*this);
   }
