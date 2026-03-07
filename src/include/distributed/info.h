@@ -17,14 +17,15 @@ class DistributedInfo {
   int m_size_;
 };
 
-inline static thread_local DistributedInfo distributed_info(0, 1);
-
-inline auto SetDistributedInfo(int rank, int size) -> void {
-  distributed_info.SetRank(rank);
-  distributed_info.SetSize(size);
+inline static auto GetDistributedInfo() -> DistributedInfo & {
+  static DistributedInfo instance(0, 1);  // 首次调用时初始化，C++11 起线程安全
+  return instance;
 }
 
-inline auto GetDistributedInfo() -> const DistributedInfo & { return distributed_info; }
+inline auto SetDistributedInfo(int rank, int size) -> void {
+  GetDistributedInfo().SetRank(rank);
+  GetDistributedInfo().SetSize(size);
+}
 
 }  // namespace yllang
 

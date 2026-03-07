@@ -1,9 +1,9 @@
 #ifndef YLLANG_KVCACHE_BASE_H_
 #define YLLANG_KVCACHE_BASE_H_
-
+#include <torch/torch.h>
 namespace yllang {
 
-enum KVCacheLayout : uint8_t { kPageFirst = 0, kLayerFirst };
+enum KVCacheLayout : std::uint8_t { kPageFirst = 0, kLayerFirst };
 
 class BaseKVCache {
  public:

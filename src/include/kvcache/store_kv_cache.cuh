@@ -7,11 +7,11 @@
 
 // Project internal headers
 #include <torch/torch.h>
+#include "config/config.h"
 #include "cuda/launch_kernel.cuh"
 #include "cuda/memory.cuh"
 #include "util/device.h"
 #include "util/tensor.h"
-#include "util/util.h"
 
 namespace yllang {
 
@@ -23,14 +23,14 @@ namespace yllang {
  */
 class StoreKernelParams {
  public:
-  void *__restrict__ k_cache;        // Pointer to the target buffer for K cache
-  void *__restrict__ v_cache;        // Pointer to the target buffer for V cache
-  const void *__restrict__ k;        // Pointer to the input K tensor data
-  const void *__restrict__ v;        // Pointer to the input V tensor data
-  const void *__restrict__ indices;  // Pointer to the indices tensor data (type int32_t or int64_t)
-  const int64_t kv_cache_stride;     // Stride (in bytes or elements, depending on context) for the cache
-  const int64_t kv_input_stride;     // Stride for the input tensor (along the length dimension)
-  const int64_t length;              // Number of elements to process (i.e., sequence length)
+  void *__restrict__ m_k_cache_;        // Pointer to the target buffer for K cache
+  void *__restrict__ m_v_cache_;        // Pointer to the target buffer for V cache
+  const void *__restrict__ m_k_;        // Pointer to the input K tensor data
+  const void *__restrict__ m_v_;        // Pointer to the input V tensor data
+  const void *__restrict__ m_indices_;  // Pointer to the indices tensor data (type int32_t or int64_t)
+  const int64_t m_kv_cache_stride_;     // Stride (in bytes or elements, depending on context) for the cache
+  const int64_t m_kv_input_stride_;     // Stride for the input tensor (along the length dimension)
+  const int64_t m_length_;              // Number of elements to process (i.e., sequence length)
 };
 
 /**
@@ -51,16 +51,15 @@ __global__ auto StoreKVCacheKernel(const __grid_constant__ StoreKernelParams par
   constexpr auto kWarpsPreBlock =
       kThreadsPreBlock / kThreadsPreWrap;  // kThreadsPreWrap is typically 32, defined elsewhere
   // Global warp ID = starting warp of the block + warp ID within the block
-  const auto warp_id = blockIdx.x * kWarpsPreBlock + threadIdx.x / kThreadsPreWrap;
+  const auto warp_id = (blockIdx.x * kWarpsPreBlock) + (threadIdx.x / kThreadsPreWrap);
 
   // Structured binding to extract parameter members (C++17 feature)
   const auto &[k_cache, v_cache, k, v, indices, kv_cache_stride, kv_input_stride, length] = params;
 
   // If PDL is enabled, wait for a condition (possibly used for synchronization or pipelining)
   yllang::pdl::Wait<kUsePDL>();
-
   // Each warp handles one element; only warps with ID < length execute
-  if (warp_id < length) {
+  if (std::cmp_less(warp_id, length)) {
     // Read the position from the indices tensor (implicitly cast to type T)
     const auto pos = static_cast<const T *__restrict__>(indices)[warp_id];
 
@@ -96,8 +95,8 @@ __global__ auto StoreKVCacheKernel(const __grid_constant__ StoreKernelParams par
  * @param indices            Indices tensor
  */
 template <size_t kElementSize, size_t kThreadsPreBlock = 128, bool kUsePDL = false>
-auto StoreKVCache(const torch::Tensor k, const torch::Tensor v, const torch::Tensor k_cache,
-                             const torch::Tensor v_cache, const torch::Tensor indices) -> void {
+auto StoreKVCache(const torch::Tensor &k, const torch::Tensor &v, const torch::Tensor &k_cache,
+                  const torch::Tensor &v_cache, const torch::Tensor &indices) -> void {
   // Symbolic variables used to match tensor shapes and attributes (defined in util/tensor.h)
   SymbolicSize s_kv_size{};       // Represents the inner size dimension of each element
   SymbolicSize s_length{};        // Represents the sequence length dimension
@@ -130,29 +129,30 @@ auto StoreKVCache(const torch::Tensor k, const torch::Tensor v, const torch::Ten
   bool use_int_32 = (32 == indices_type.UnWrap().itemsize());
 
   // Retrieve the actual length value
-  auto length = s_kv_size.UnWrap();
+  auto element_length = s_kv_size.UnWrap();
 
   // Get the byte size of the K/V data type
   auto kv_dtype_size = s_kv_dtype.UnWrap().itemsize();
 
   // Runtime check: the provided kElementSize must equal length * kv_dtype_size
-  RuntimeCheck(kElementSize == length * kv_dtype_size);
+  RuntimeCheck(kElementSize == element_length * kv_dtype_size);
 
   // Compute number of warps per block
   constexpr auto kWarpsPreBlock = kThreadsPreBlock / kThreadsPreWrap;
 
+  auto num_tokens = s_length.UnWrap();
   // Grid dimension: each block provides kWarpsPreBlock warps, and we need length warps in total
-  dim3 block_dim((length + kWarpsPreBlock - 1) / kWarpsPreBlock);
+  dim3 block_dim((num_tokens + kWarpsPreBlock - 1) / kWarpsPreBlock);
 
   // Construct kernel parameters
-  auto params = StoreKernelParams{.k_cache = k_cache.data_ptr(),
-                                  .v_cache = v_cache.data_ptr(),
-                                  .k = k.data_ptr(),
-                                  .v = v.data_ptr(),
-                                  .indices = indices.data_ptr(),
-                                  .kv_cache_stride = s_cache_stride.UnWrap(),
-                                  .kv_input_stride = s_kv_stride.UnWrap(),
-                                  .length = s_length.UnWrap()};
+  auto params = StoreKernelParams{.m_k_cache_ = k_cache.data_ptr(),
+                                  .m_v_cache_ = v_cache.data_ptr(),
+                                  .m_k_ = k.data_ptr(),
+                                  .m_v_ = v.data_ptr(),
+                                  .m_indices_ = indices.data_ptr(),
+                                  .m_kv_cache_stride_ = static_cast<int64_t>(kv_dtype_size) * s_cache_stride.UnWrap(),
+                                  .m_kv_input_stride_ = static_cast<int64_t>(kv_dtype_size) * s_kv_stride.UnWrap(),
+                                  .m_length_ = num_tokens};
 
   // Select the appropriate kernel instantiation based on index type (int32_t or int64_t)
   const auto kernel = use_int_32 ? yllang::StoreKVCacheKernel<kElementSize, kThreadsPreBlock, int32_t, kUsePDL>

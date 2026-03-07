@@ -9,7 +9,7 @@ class PanicError final : public std::runtime_error {
  public:
   PanicError(std::string msg) : std::runtime_error(msg), m_message_(std::move(msg)) {}
 
-  auto detail() const -> std::string_view {
+  auto Detail() const -> std::string_view {
     const auto sv = std::string_view(m_message_);
     const auto pos = sv.find(": ");
     return pos == std::string_view::npos ? sv : sv.substr(pos + 2);

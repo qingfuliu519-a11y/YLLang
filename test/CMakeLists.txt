@@ -1,11 +1,7 @@
 message("=============TEST=============")
 message(STATUS "Enable test module.")
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
-set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
-
-
-file(GLOB_RECURSE TEST_SOURCE LIST_DIRECTORIES false ./*.cpp)
+file(GLOB_RECURSE TEST_SOURCE LIST_DIRECTORIES false ./*.cpp ./*.cu)
 
 foreach (filename IN LISTS TEST_SOURCE)
     get_filename_component(target ${filename} NAME_WLE)
@@ -23,7 +19,6 @@ foreach (filename IN LISTS TEST_SOURCE)
             CUDA::cudart
             YLLANG_Lib
     )
-    set_source_files_properties(${filename} PROPERTIES LANGUAGE CUDA)
 
     set_target_properties(${target} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 

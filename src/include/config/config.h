@@ -11,6 +11,6 @@ constexpr int kElementSize = 8 * 64 * 4;
 constexpr int kThreadsPreBlock = 128;
 constexpr int kThreadsPreWrap = 32;
 
-} // namespace yllang
+}  // namespace yllang
 
-#endif // YLLANG_CONFIG_H_
+#endif  // YLLANG_CONFIG_H_

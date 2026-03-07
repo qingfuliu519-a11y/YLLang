@@ -4,8 +4,6 @@
 #include <cstdint>
 
 namespace yllang {
-inline constexpr size_t K_THREADS_PRE_WRAP = 32;
-
 template <typename T>
 class BaseRef {
  public:
