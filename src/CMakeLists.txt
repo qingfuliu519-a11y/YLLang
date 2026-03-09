@@ -20,5 +20,5 @@ target_link_libraries(YLLANG_Lib PRIVATE ${TORCH_LIBRARIES} CUDA::cudart)
 set_target_properties(YLLANG_Lib PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 # Include directories for the library's own headers (src/include)
-target_include_directories(YLLANG_Lib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(YLLANG_Lib PRIVATE ${CMAKE_SOURCE_DIR}/src/include ${THIRD_PARTY_INCLUDE_DIRS})
 

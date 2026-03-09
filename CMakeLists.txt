@@ -22,6 +22,9 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     list(APPEND CUDA_NVCC_FLAGS -g -G)
 endif ()
 
+include_directories($ENV{VSINCLUDE})
+link_directories($ENV{VSLIB})
+
 add_subdirectory(tools)
 
 
@@ -44,6 +47,7 @@ include_directories(
 # ----------------------------------------------------------------------
 # Add src subdirectory, which defines the YLLANG_Lib target
 # ----------------------------------------------------------------------
+add_subdirectory(3rdparty)
 add_subdirectory(src)
 
 # Define the executable
