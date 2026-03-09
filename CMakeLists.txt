@@ -36,7 +36,12 @@ add_subdirectory(tools)
 # Finally, adds the necessary include directories for LibTorch headers
 # and the project's own src/include directory.
 # ----------------------------------------------------------------------
-set(TORCH_INSTALL_DIR "E:/libtorch/debug" CACHE PATH "Path to the LibTorch installation (e.g., where lib/ and include/ are located)")
+set(TORCH_INSTALL_DIR "" CACHE PATH "Path to the LibTorch installation (e.g., where lib/ and include/ are located)")
+if(NOT TORCH_INSTALL_DIR)
+    message(FATAL_ERROR "TORCH_INSTALL_DIR must be specified. Please set it via -DTORCH_INSTALL_DIR=<path>")
+endif()
+message(STATUS "TORCH_INSTALL_DIR: ${TORCH_INSTALL_DIR}")
+
 find_package(Torch REQUIRED PATHS ${TORCH_INSTALL_DIR} NO_DEFAULT_PATH)
 include_directories(
         ${TORCH_INSTALL_DIR}/include
