@@ -8,8 +8,7 @@ namespace yllang {
 
 class Attention : public BaseLayer {
  public:
-  Attention(int layer_id, int num_qo_heads, int num_kv_heads, int head_dim,
-            RMSNorm qo_norm, RMSNorm k_norm)
+  Attention(int layer_id, int num_qo_heads, int num_kv_heads, int head_dim, RMSNorm qo_norm, RMSNorm k_norm)
       : m_layer_id_(layer_id),
         m_num_qo_heads_(num_qo_heads),
         m_num_kv_heads_(num_kv_heads),

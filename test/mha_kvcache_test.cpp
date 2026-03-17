@@ -25,7 +25,8 @@ auto RandomLoc(int batch_size, int seq_len, int num_pages, torch::Device device)
 // 测试构造函数在不同布局下是否生成正确的内部缓冲区和外部视图
 //------------------------------------------------------------------------------
 void TestConstructorCreatesCorrectShapePageFirst() {
-  std::cout << "\n=== TestConstructorCreatesCorrectShapePageFirst ===" << "\n";
+  std::cout << "\n=== TestConstructorCreatesCorrectShapePageFirst ==="
+            << "\n";
 
   int num_layers = 2;
   int num_pages = 4;
@@ -90,7 +91,8 @@ void TestConstructorCreatesCorrectShapePageFirst() {
 }
 
 void TestConstructorCreatesCorrectShapeLayerFirst() {
-  std::cout << "\n=== TestConstructorCreatesCorrectShapeLayerFirst ===" << "\n";
+  std::cout << "\n=== TestConstructorCreatesCorrectShapeLayerFirst ==="
+            << "\n";
 
   int num_layers = 2;
   int num_pages = 4;
@@ -152,7 +154,8 @@ void TestConstructorCreatesCorrectShapeLayerFirst() {
 // 测试不同层的 KCache / VCache 是否相互独立（地址不同）
 //------------------------------------------------------------------------------
 void TestKCacheAndVCacheAreIndependent() {
-  std::cout << "\n=== TestKCacheAndVCacheAreIndependent ===" << "\n";
+  std::cout << "\n=== TestKCacheAndVCacheAreIndependent ==="
+            << "\n";
 
   int num_layers = 2;
   int num_pages = 4;
@@ -174,12 +177,15 @@ void TestKCacheAndVCacheAreIndependent() {
   std::cout << "k0 data_ptr: " << k0.data_ptr() << ", k1 data_ptr: " << k1.data_ptr() << "\n";
   std::cout << "v0 data_ptr: " << v0.data_ptr() << ", v1 data_ptr: " << v1.data_ptr() << "\n";
 
-  std::cout << "Checking k0.data_ptr() != k1.data_ptr()" << "\n";
+  std::cout << "Checking k0.data_ptr() != k1.data_ptr()"
+            << "\n";
   assert(k0.data_ptr() != k1.data_ptr());
-  std::cout << "Checking v0.data_ptr() != v1.data_ptr()" << "\n";
+  std::cout << "Checking v0.data_ptr() != v1.data_ptr()"
+            << "\n";
   assert(v0.data_ptr() != v1.data_ptr());
   // 确保 K 和 V 也是独立的
-  std::cout << "Checking k0.data_ptr() != v0.data_ptr()" << "\n";
+  std::cout << "Checking k0.data_ptr() != v0.data_ptr()"
+            << "\n";
   assert(k0.data_ptr() != v0.data_ptr());
 
   std::cout << "--- TestKCacheAndVCacheAreIndependent passed ---\n";
@@ -252,7 +258,8 @@ void PrintAddressTable(const torch::Tensor &k, int batch_size, int seq_len) {
 // 测试 StoreKV 的基本存储功能：写入后能正确读取
 //------------------------------------------------------------------------------
 void TestStoreKVStoresCorrectly() {
-  std::cout << "\n=== TestStoreKVStoresCorrectly ===" << "\n";
+  std::cout << "\n=== TestStoreKVStoresCorrectly ==="
+            << "\n";
 
   int num_layers = 2;
   int num_pages = 8;
@@ -329,7 +336,8 @@ void TestStoreKVStoresCorrectly() {
 // 测试多次写入同一 page 时的覆盖行为（后写入应覆盖前写入）
 //------------------------------------------------------------------------------
 void TestStoreKVOverwritesSamePage() {
-  std::cout << "\n=== TestStoreKVOverwritesSamePage ===" << "\n";
+  std::cout << "\n=== TestStoreKVOverwritesSamePage ==="
+            << "\n";
 
   int num_layers = 2;
   int num_pages = 8;
@@ -374,9 +382,11 @@ void TestStoreKVOverwritesSamePage() {
   std::cout << "After second write, K matches second: " << (k_match ? "yes" : "NO") << "\n";
   std::cout << "After second write, V matches second: " << (v_match ? "yes" : "NO") << "\n";
 
-  std::cout << "Checking that K matches second write" << "\n";
+  std::cout << "Checking that K matches second write"
+            << "\n";
   assert(k_match);
-  std::cout << "Checking that V matches second write" << "\n";
+  std::cout << "Checking that V matches second write"
+            << "\n";
   assert(v_match);
 
   std::cout << "--- TestStoreKVOverwritesSamePage passed ---\n";
@@ -386,7 +396,8 @@ void TestStoreKVOverwritesSamePage() {
 // 测试边界情况：空的输入（batch=0 或 seq=0）不应崩溃
 //------------------------------------------------------------------------------
 void TestStoreKVWithEmptyInput() {
-  std::cout << "\n=== TestStoreKVWithEmptyInput ===" << "\n";
+  std::cout << "\n=== TestStoreKVWithEmptyInput ==="
+            << "\n";
 
   int num_layers = 2;
   int num_pages = 8;
@@ -406,17 +417,20 @@ void TestStoreKVWithEmptyInput() {
   auto k_empty_batch = torch::randn({0, 3, num_kv_heads, head_dim}, device).to(dtype);
   auto v_empty_batch = torch::randn({0, 3, num_kv_heads, head_dim}, device).to(dtype);
   auto loc_empty_batch = RandomLoc(0, 3, num_pages, device);
-  std::cout << "Calling StoreKV with batch=0 (should not crash)" << "\n";
+  std::cout << "Calling StoreKV with batch=0 (should not crash)"
+            << "\n";
   cache.StoreKV(k_empty_batch, v_empty_batch, loc_empty_batch, layer_id);  // 不应崩溃
 
   // seq = 0
   auto k_empty_seq = torch::randn({2, 0, num_kv_heads, head_dim}, device).to(dtype);
   auto v_empty_seq = torch::randn({2, 0, num_kv_heads, head_dim}, device).to(dtype);
   auto loc_empty_seq = RandomLoc(2, 0, num_pages, device);
-  std::cout << "Calling StoreKV with seq=0 (should not crash)" << "\n";
+  std::cout << "Calling StoreKV with seq=0 (should not crash)"
+            << "\n";
   cache.StoreKV(k_empty_seq, v_empty_seq, loc_empty_seq, layer_id);  // 不应崩溃
 
-  std::cout << "Empty input handled without crash." << "\n";
+  std::cout << "Empty input handled without crash."
+            << "\n";
   std::cout << "--- TestStoreKVWithEmptyInput passed ---\n";
 }
 
@@ -424,7 +438,8 @@ void TestStoreKVWithEmptyInput() {
 // 测试 NumLayers 和 Device 接口返回正确值
 //------------------------------------------------------------------------------
 void TestNumLayersAndDevice() {
-  std::cout << "\n=== TestNumLayersAndDevice ===" << "\n";
+  std::cout << "\n=== TestNumLayersAndDevice ==="
+            << "\n";
 
   int num_layers = 3;
   int num_pages = 4;
@@ -438,12 +453,14 @@ void TestNumLayersAndDevice() {
 
   MHAKVCache cache(num_layers, num_pages, num_kv_heads, head_dim, KVCacheLayout::kPageFirst, device, dtype);
 
-  std::cout << "NumLayers(): " << cache.NumLayers() << " (expected " << num_layers << ")" << "\n";
+  std::cout << "NumLayers(): " << cache.NumLayers() << " (expected " << num_layers << ")"
+            << "\n";
   std::cout << "Checking NumLayers() == " << num_layers << "\n";
   assert(cache.NumLayers() == num_layers);
 
   std::cout << "Device().type(): " << static_cast<int>(cache.Device().type()) << " (expected "
-            << static_cast<int>(device.type()) << ")" << "\n";
+            << static_cast<int>(device.type()) << ")"
+            << "\n";
   std::cout << "Checking Device().type() == " << static_cast<int>(device.type()) << "\n";
   assert(cache.Device().type() == device.type());
 
@@ -454,7 +471,8 @@ void TestNumLayersAndDevice() {
 // 测试多次随机写入不同页面（含覆盖）后，缓存中的内容与最后一次写入一致
 //------------------------------------------------------------------------------
 void TestStoreKVMultipleRandomWrites() {
-  std::cout << "\n=== TestStoreKVMultipleRandomWrites ===" << "\n";
+  std::cout << "\n=== TestStoreKVMultipleRandomWrites ==="
+            << "\n";
 
   // 配置参数（可根据需要调大以增加压力）
   int num_layers = 100;
@@ -550,7 +568,8 @@ void TestStoreKVMultipleRandomWrites() {
     }
   }
 
-  std::cout << "Checking all written pages match last write..." << "\n";
+  std::cout << "Checking all written pages match last write..."
+            << "\n";
   assert(all_correct);
   std::cout << "--- TestStoreKVMultipleRandomWrites passed ---\n";
 }

@@ -1,3 +1,7 @@
 #include "layers/base_layer.h"
+#include "batch/batch_manager.h"
+#include "kvcache/cache_manager.h"
+#include "kvcache/radix_tree.h"
 #include "layers/linear.h"
 #include "layers/rms_norm.h"
+#include "request/request.h"

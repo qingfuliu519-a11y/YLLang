@@ -21,4 +21,3 @@ set_target_properties(YLLANG_Lib PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 # Include directories for the library's own headers (src/include)
 target_include_directories(YLLANG_Lib PRIVATE ${CMAKE_SOURCE_DIR}/src/include ${THIRD_PARTY_INCLUDE_DIRS})
-

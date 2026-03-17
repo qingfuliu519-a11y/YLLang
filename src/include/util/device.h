@@ -17,11 +17,11 @@ class Device {
 
 class C10Device final : public Device {
  public:
-  C10Device() : m_device_(c10::DeviceType::COMPILE_TIME_MAX_DEVICE_TYPES, -1) {};
+  C10Device() : m_device_(c10::DeviceType::COMPILE_TIME_MAX_DEVICE_TYPES, -1){};
 
-  C10Device(const DeviceType &type, const DeviceIndex &index) : m_device_(static_cast<c10::DeviceType>(type), index) {};
+  C10Device(const DeviceType &type, const DeviceIndex &index) : m_device_(static_cast<c10::DeviceType>(type), index){};
 
-  C10Device(const c10::Device &device) : m_device_(device) {};
+  C10Device(const c10::Device &device) : m_device_(device){};
 
   ~C10Device() override = default;
 

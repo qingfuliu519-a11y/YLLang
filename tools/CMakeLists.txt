@@ -4,7 +4,7 @@
 
 # Find Python interpreter (required for running helper scripts)
 find_package(Python REQUIRED)
-string(REPLACE "/" "\\\\" NATIVE_SOURCE_DIR "${CMAKE_SOURCE_DIR}")
+set(NATIVE_SOURCE_DIR ${CMAKE_SOURCE_DIR})
 # Directory containing helper scripts (run_clang_format.py, run_clang_tidy.py)
 set(FORMAT_CHECK_TOOLS_SCRIPTS_DIR "${NATIVE_SOURCE_DIR}/tools")
 
@@ -66,9 +66,9 @@ else ()
             COMMAND ${Python_EXECUTABLE} ${FORMAT_CHECK_TOOLS_SCRIPTS_DIR}/run_clang_tidy.py
             -clang-tidy-binary ${CLANG_TIDY_BIN}
             -p ${CMAKE_BINARY_DIR}
-            -header-filter "${NATIVE_SOURCE_DIR}\\\\src\\\\include\\\\.*\\.(h|cuh)$"
-            -config-file "${NATIVE_SOURCE_DIR}\\\\.clang-tidy"
-            files "${NATIVE_SOURCE_DIR}\\\\src\\\\.*" "${NATIVE_SOURCE_DIR}\\\\main.cpp" "${NATIVE_SOURCE_DIR}\\\\test\\\\.*"
+            -header-filter "${NATIVE_SOURCE_DIR}/src/include/.*/.(h|cuh)$"
+            -config-file "${NATIVE_SOURCE_DIR}/.clang-tidy"
+            files "${NATIVE_SOURCE_DIR}/src/.*" "${NATIVE_SOURCE_DIR}/main.cpp" "${NATIVE_SOURCE_DIR}/test/.*"
             COMMENT "Running clang-tidy static analysis"
             VERBATIM
     )
