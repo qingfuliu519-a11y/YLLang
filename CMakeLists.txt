@@ -3,13 +3,6 @@
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(YLLang LANGUAGES CXX CUDA)
 
-# Enable MSVC hot reload if policy supports it
-if (POLICY CMP0141)
-    cmake_policy(SET CMP0141 NEW)
-    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT
-            "$<IF:$<$AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
-endif ()
-
 # Set C++ standard globally to C++20
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -22,11 +15,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     list(APPEND CUDA_NVCC_FLAGS -g -G)
 endif ()
 
-include_directories($ENV{VSINCLUDE})
-link_directories($ENV{VSLIB})
-
 add_subdirectory(tools)
-
 
 # ----------------------------------------------------------------------
 # Setup: LibTorch (PyTorch C++ API)
@@ -62,13 +51,5 @@ target_link_libraries(YLLANG PRIVATE ${TORCH_LIBRARIES} CUDA::cudart YLLANG_Lib)
 
 set_target_properties(YLLANG PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
-# On Windows/MSVC, copy Torch DLLs to the output directory after build
-file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
-add_custom_command(TARGET YLLANG POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${TORCH_DLLS}
-        $<TARGET_FILE_DIR:YLLANG>
-        COMMENT "Copying Torch DLLs to output directory"
-)
 
 add_subdirectory(test)
