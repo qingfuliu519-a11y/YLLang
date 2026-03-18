@@ -11,7 +11,7 @@
 #include "config/config.h"
 #include "distributed/info.h"
 #include "kvcache/base_kvcache.h"
-#include "kvcache/store_kv_cache.cuh"
+#include "kvcache/store_kv_cache.h"
 
 namespace yllang {
 
@@ -50,8 +50,7 @@ class MHAKVCache : public BaseKVCache {
         m_buffer_ = torch::zeros({2, m_num_layers_, m_num_pages_, m_num_local_kv_heads_, m_head_dim_}, options);
         break;
       case KVCacheLayout::kPageFirst:
-        m_buffer_ = torch::zeros({2, m_num_layers_, m_num_pages_, m_num_local_kv_heads_, m_head_dim_}, options)
-                        .permute({0, 2, 1, 3, 4});
+        m_buffer_ = torch::zeros({2, m_num_pages_, m_num_layers_, m_num_local_kv_heads_, m_head_dim_}, options);
         break;
       default:
         throw std::logic_error("no such KVCacheLayout");

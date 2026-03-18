@@ -1,8 +1,8 @@
 #ifndef YLLANG_UTIL_PANIC_H_
 #define YLLANG_UTIL_PANIC_H_
-#include <source_location>
 #include <sstream>
 #include <utility>
+#include "util/source_location.h"
 
 namespace yllang {
 class PanicError final : public std::runtime_error {
@@ -20,10 +20,10 @@ class PanicError final : public std::runtime_error {
 };
 
 template <typename... Args>
-[[noreturn]] inline auto Panic(std::source_location location, Args &&...args) -> void {
+[[noreturn]] inline auto Panic(const yllang::SourceLocation &location, Args &&...args) -> void {
   std::ostringstream oss;
-  oss << "Runtime check failed At:" << location.file_name() << ":" << location.line();
-  oss << " (" << location.function_name() << ")";
+  oss << "Runtime check failed At:" << location.FileName() << ":" << location.Line();
+  // oss << " (" << location.function_name() << ")";
   if constexpr (sizeof...(args) > 0) {
     oss << " : ";
     // (oss << ... << std::forward<Args>(std::move(args)));
@@ -36,7 +36,7 @@ class RuntimeCheck {
  public:
   template <typename T>
   explicit RuntimeCheck(T &&condition, Args &&...args,
-                        std::source_location location = std::source_location::current()) {
+                        yllang::SourceLocation location = yllang::SourceLocation::Current()) {
     if (!condition) {
       [[unlikely]];
       Panic(location, std::forward<Args>(args)...);

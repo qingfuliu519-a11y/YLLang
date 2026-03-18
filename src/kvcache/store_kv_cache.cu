@@ -8,8 +8,9 @@
 // Project internal headers
 #include <torch/torch.h>
 #include "config/config.h"
-#include "cuda/launch_kernel.cuh"
+#include "cuda/launch_kernel.h"
 #include "cuda/memory.cuh"
+#include "kvcache/store_kv_cache.h"
 #include "util/device.h"
 #include "util/tensor.h"
 
@@ -53,7 +54,7 @@ __global__ auto StoreKVCacheKernel(const __grid_constant__ StoreKernelParams par
   // Global warp ID = starting warp of the block + warp ID within the block
   const auto warp_id = (blockIdx.x * kWarpsPreBlock) + (threadIdx.x / kThreadsPreWrap);
 
-  // Structured binding to extract parameter members (C++17 feature)
+  // Structured binding to extract parameter members
   const auto &[k_cache, v_cache, k, v, indices, kv_cache_stride, kv_input_stride, length] = params;
 
   // If PDL is enabled, wait for a condition (possibly used for synchronization or pipelining)
@@ -61,7 +62,7 @@ __global__ auto StoreKVCacheKernel(const __grid_constant__ StoreKernelParams par
   // Each warp handles one element; only warps with ID < length execute
   if (std::cmp_less(warp_id, length)) {
     // Read the position from the indices tensor (implicitly cast to type T)
-    const auto pos = static_cast<const T *__restrict__>(indices)[warp_id];
+    const auto pos = static_cast<const T *>(indices)[warp_id];
 
     // Compute source and destination addresses for K and perform the copy
     const auto k_src = yllang::Offset(k, warp_id * kv_input_stride);
@@ -164,6 +165,8 @@ auto StoreKVCache(const torch::Tensor &k, const torch::Tensor &v, const torch::T
   yllang::LaunchKernel(block_dim, kThreadsPreBlock, device).WithAttr(kUsePDL)(kernel, params);
 }
 
+template auto StoreKVCache<kElementSize>(const torch::Tensor &, const torch::Tensor &, const torch::Tensor &,
+                                         const torch::Tensor &, const torch::Tensor &) -> void;
 }  // namespace yllang
 
 #endif  // YLLANG_KVCACHE_STORE_KV_CACHE_CUH

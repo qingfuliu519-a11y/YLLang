@@ -368,13 +368,13 @@ class TensorMatcher {
    * @throws RuntimeCheck on any mismatch.
    */
   auto Verify(const torch::Tensor &view) && -> TensorMatcher && {
-    const auto dim = static_cast<std::size_t>(view.dim());
+    const auto dim = view.dim();
     RuntimeCheck(dim == m_shape_.size());
-    for (const auto i : std::views::iota(std::size_t{0}, dim)) {
+    for (int64_t i = 0; i < dim; ++i) {
       m_shape_[i]->Verify(view.size(i));
     }
     if (HasStride()) {
-      for (const auto i : std::views::iota(std::size_t{0}, dim)) {
+      for (int64_t i = 0; i < dim; ++i) {
         if (view.size(i) != 1 || !m_strides_[i]->HasValue()) {
           m_strides_[i]->Verify(view.stride(i));
         }

@@ -1,20 +1,18 @@
 #ifndef YLLANG_CUDA_UTIL_H_
 #define YLLANG_CUDA_UTIL_H_
-#include <cuda_runtime.h>
-#include <source_location>
-#include <sstream>
-#include <utility>
 #include "util/panic.h"
+#include "util/source_location.h"
 namespace yllang {
 
-auto inline CudaCheck(cudaError_t error, std::source_location location = std::source_location::current()) -> void {
+auto inline CudaCheck(cudaError_t error, const yllang::SourceLocation &location = yllang::SourceLocation::Current())
+    -> void {
   if (error != ::cudaSuccess) {
     [[unlikely]];
     Panic(location, "CUDA Error: ", ::cudaGetErrorString(error));
   }
 }
 
-auto inline CudaCheck(std::source_location location = std::source_location::current()) -> void {
+auto inline CudaCheck(const yllang::SourceLocation &location = yllang::SourceLocation::Current()) -> void {
   CudaCheck(::cudaGetLastError(), location);
 }
 

@@ -1,13 +1,9 @@
 ﻿# src/CMakeLists.txt
 
 # Collect source files (recursively) for the YLLANG library
-file(GLOB_RECURSE YLLang_SOURCE_FILES
-        LIST_DIRECTORIES false
-        CONFIGURE_DEPENDS
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.cu"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.cuh"
+set(YLLang_SOURCE_FILES
+        "${CMAKE_SOURCE_DIR}/src/layers/base_layer.cpp"
+        "${CMAKE_SOURCE_DIR}/src/kvcache/store_kv_cache.cu"
 )
 
 # Define the library

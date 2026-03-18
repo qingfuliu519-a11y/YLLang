@@ -3,7 +3,7 @@
 
 #include <c10/cuda/CUDAStream.h>
 #include <cuda_runtime.h>
-#include "cuda/check.cuh"
+#include "../util/check.h"
 #include "util/device.h"
 namespace yllang {
 
