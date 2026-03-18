@@ -4,4 +4,6 @@
 #include "kvcache/radix_tree.h"
 #include "layers/linear.h"
 #include "layers/rms_norm.h"
+#include "models/model.h"
 #include "request/request.h"
+#include "tokenizer/tokenizer.h"

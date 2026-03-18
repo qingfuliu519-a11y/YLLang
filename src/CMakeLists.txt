@@ -4,16 +4,22 @@
 set(YLLang_SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/src/layers/base_layer.cpp"
         "${CMAKE_SOURCE_DIR}/src/kvcache/store_kv_cache.cu"
+        "${CMAKE_SOURCE_DIR}/src/models/model.cpp"
 )
 
 # Define the library
 add_library(YLLANG_Lib ${YLLang_SOURCE_FILES})
 
 # Link Torch libraries and CUDA runtime
-target_link_libraries(YLLANG_Lib PRIVATE ${TORCH_LIBRARIES} CUDA::cudart)
+target_link_libraries(YLLANG_Lib PRIVATE ${TORCH_LIBRARIES} CUDA::cudart tokenizers_cpp)
 
 # Enable separable compilation for CUDA
 set_target_properties(YLLANG_Lib PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 # Include directories for the library's own headers (src/include)
-target_include_directories(YLLANG_Lib PRIVATE ${CMAKE_SOURCE_DIR}/src/include ${THIRD_PARTY_INCLUDE_DIRS})
+target_include_directories(
+        YLLANG_Lib
+        PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/include
+        ${THIRD_PARTY_INCLUDE_DIRS}
+        ${TOKENZIER_CPP_INCLUDE_DIRS})

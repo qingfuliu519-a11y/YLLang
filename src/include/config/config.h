@@ -32,6 +32,10 @@ constexpr int kThreadsPreBlock = 128;
  */
 constexpr int kThreadsPreWrap = 32;
 
+const std::string kCachePath = "~/.yllang";
+
+const std::string kModelPath = kCachePath + "/model";
+
 }  // namespace yllang
 
 #endif  // YLLANG_CONFIG_H_
