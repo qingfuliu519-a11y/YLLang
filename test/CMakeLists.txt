@@ -11,8 +11,13 @@ foreach (filename IN LISTS TEST_SOURCE)
 
     add_executable(${target} ${filename})
 
-    target_include_directories(${target}
-            PRIVATE ${CMAKE_SOURCE_DIR}/src
+
+    target_include_directories(
+            ${target}
+            PRIVATE
+            ${TORCH_INSTALL_DIR}/include
+            ${TORCH_INSTALL_DIR}/include/torch/csrc/api/include
+            ${CMAKE_SOURCE_DIR}/src/include
     )
 
     target_link_libraries(${target}

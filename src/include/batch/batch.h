@@ -20,6 +20,8 @@ namespace yllang {
  */
 class Batch {
  public:
+
+  Batch() = default;
   /**
    * @brief Constructs a Batch from request list and associated tensors.
    *
@@ -29,13 +31,17 @@ class Batch {
    * @param load_indices   Indices for loading cached data.
    * @param write_indices  Indices for writing new data to cache.
    */
-  Batch(std::vector<std::shared_ptr<Request>> request_list, torch::Tensor input_ids, torch::Tensor out_loc,
-        torch::Tensor load_indices, torch::Tensor write_indices)
+  Batch(std::vector<std::shared_ptr<Request>> request_list,torch::Tensor input_ids,torch::Tensor out_loc, torch::Tensor load_indices,
+        torch::Tensor write_indices)
       : m_request_(std::move(request_list)),
-        m_input_ids_(std::move(input_ids)),
+        m_input_ids_(input_ids),
         m_out_loc_(std::move(out_loc)),
         m_load_indices_(std::move(load_indices)),
         m_write_indices_(std::move(write_indices)) {}
+
+  auto InputIds() -> torch::Tensor & { return m_input_ids_; }
+
+  auto Requests() const -> const std::vector<std::shared_ptr<Request>> & { return m_request_; }
 
  private:
   std::vector<std::shared_ptr<Request>> m_request_;  ///< List of requests in the batch.

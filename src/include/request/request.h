@@ -13,10 +13,10 @@
 namespace yllang {
 
 /**
- * @brief Represents a user message containing input token IDs and a user identifier.
+ * @brief Represents a user message containing the raw input text and a user identifier.
  *
- * This class is used to encapsulate the raw input from a user before it is
- * turned into a request for processing.
+ * This class is used to encapsulate the user's original message before tokenization
+ * and processing.
  */
 class UserMsg {
  public:
@@ -24,26 +24,26 @@ class UserMsg {
   ~UserMsg() = default;
 
   /**
-   * @brief Constructs a UserMsg with given input IDs and user ID.
+   * @brief Constructs a UserMsg with the given input message and user ID.
    *
-   * @param input_ids 1D tensor of token IDs.
+   * @param input_msg The raw input text from the user.
    * @param user_id   String identifying the user.
    */
-  UserMsg(torch::Tensor input_ids, std::string user_id)
-      : m_input_ids_(std::move(input_ids)), m_user_id_(std::move(user_id)) {}
+  UserMsg(std::string input_msg, std::string user_id)
+      : m_input_msg_(std::move(input_msg)), m_user_id_(std::move(user_id)) {}
 
-  // Copy operations are deleted to avoid accidental duplication of tensors.
+  // Copy operations are deleted to avoid accidental duplication.
   UserMsg(const UserMsg &) = delete;
   auto operator=(const UserMsg &) = delete;
 
-  /// Returns a const reference to the input IDs tensor.
-  auto InputIds() const -> torch::Tensor { return m_input_ids_; }
+  /// Returns a const reference to the input message.
+  auto InputMsg() const -> const std::string & { return m_input_msg_; }
 
-  /// Returns a mutable reference to the input IDs tensor.
-  auto InputIds() -> torch::Tensor & { return m_input_ids_; }
+  /// Returns a mutable reference to the input message.
+  auto InputMsg() -> std::string & { return m_input_msg_; }
 
-  /// Sets the input IDs tensor.
-  auto SetInputIds(torch::Tensor ids) -> void { m_input_ids_ = std::move(ids); }
+  /// Sets the input message.
+  auto SetInputIds(std::string msg) -> void { m_input_msg_ = std::move(msg); }
 
   /// Returns a const reference to the user ID string.
   auto UserId() const -> std::string { return m_user_id_; }
@@ -55,8 +55,8 @@ class UserMsg {
   auto SetUserId(std::string user_id) -> void { m_user_id_ = std::move(user_id); }
 
  private:
-  torch::Tensor m_input_ids_;  ///< 1D tensor of token IDs.
-  std::string m_user_id_;      ///< User identifier.
+  std::string m_input_msg_;  ///< Raw user input message.
+  std::string m_user_id_;    ///< User identifier.
 };
 
 /**

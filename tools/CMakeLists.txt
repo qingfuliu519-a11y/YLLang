@@ -60,7 +60,7 @@ else ()
 
     # Enable generation of compile_commands.json for clang-tidy
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
+    message("            -clang-tidy-binary ${CLANG_TIDY_BIN} -p ${CMAKE_BINARY_DIR} -header-filter ${NATIVE_SOURCE_DIR}/src/include/.*/.(h|cuh)$ -config-file ${NATIVE_SOURCE_DIR}/.clang-tidy files ${NATIVE_SOURCE_DIR}/src/.*cpp$ ${NATIVE_SOURCE_DIR}/main.cpp ${NATIVE_SOURCE_DIR}/test/.*")
     # 打印当前 CMAKE_CUDA_ARCHITECTURES 的值
     add_custom_target(check-clang-tidy
             COMMAND ${Python_EXECUTABLE} ${FORMAT_CHECK_TOOLS_SCRIPTS_DIR}/run_clang_tidy.py
@@ -68,7 +68,7 @@ else ()
             -p ${CMAKE_BINARY_DIR}
             -header-filter "${NATIVE_SOURCE_DIR}/src/include/.*/.(h|cuh)$"
             -config-file "${NATIVE_SOURCE_DIR}/.clang-tidy"
-            files "${NATIVE_SOURCE_DIR}/src/.*" "${NATIVE_SOURCE_DIR}/main.cpp" "${NATIVE_SOURCE_DIR}/test/.*"
+            "${NATIVE_SOURCE_DIR}/src/.*cpp$" "${NATIVE_SOURCE_DIR}/main.cpp" "${NATIVE_SOURCE_DIR}/test/.*"
             COMMENT "Running clang-tidy static analysis"
             VERBATIM
     )
