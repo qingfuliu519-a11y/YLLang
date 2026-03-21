@@ -21,6 +21,7 @@ namespace yllang {
 class UserMsg {
  public:
   UserMsg() = default;
+
   ~UserMsg() = default;
 
   /**
@@ -29,12 +30,11 @@ class UserMsg {
    * @param input_msg The raw input text from the user.
    * @param user_id   String identifying the user.
    */
-  UserMsg(std::string input_msg, std::string user_id)
-      : m_input_msg_(std::move(input_msg)), m_user_id_(std::move(user_id)) {}
+  UserMsg(std::string user_role, std::string input_msg)
+      : m_input_msg_(std::move(input_msg)), m_user_role_(std::move(user_role)) {}
 
-  // Copy operations are deleted to avoid accidental duplication.
-  UserMsg(const UserMsg &) = delete;
-  auto operator=(const UserMsg &) = delete;
+  UserMsg(const UserMsg &) = default;
+  auto operator=(const UserMsg &) -> UserMsg & = default;
 
   /// Returns a const reference to the input message.
   auto InputMsg() const -> const std::string & { return m_input_msg_; }
@@ -46,17 +46,17 @@ class UserMsg {
   auto SetInputIds(std::string msg) -> void { m_input_msg_ = std::move(msg); }
 
   /// Returns a const reference to the user ID string.
-  auto UserId() const -> std::string { return m_user_id_; }
+  auto UserRole() const -> std::string { return m_user_role_; }
 
   /// Returns a mutable reference to the user ID string.
-  auto UserId() -> std::string & { return m_user_id_; }
+  auto UserRole() -> std::string & { return m_user_role_; }
 
   /// Sets the user ID string.
-  auto SetUserId(std::string user_id) -> void { m_user_id_ = std::move(user_id); }
+  auto SetUserId(std::string user_role) -> void { m_user_role_ = std::move(user_role); }
 
  private:
   std::string m_input_msg_;  ///< Raw user input message.
-  std::string m_user_id_;    ///< User identifier.
+  std::string m_user_role_;  ///< User identifier.
 };
 
 /**

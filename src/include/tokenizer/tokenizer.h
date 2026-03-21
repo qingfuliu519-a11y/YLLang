@@ -9,7 +9,9 @@
 #include <memory>
 #include <string>
 #include "batch/batch.h"
+#include "minja/chat-template.hpp"
 #include "tokenizers_cpp.h"
+#include "util/util.h"
 
 namespace yllang {
 
@@ -22,7 +24,8 @@ namespace yllang {
  */
 class Tokenizer {
  public:
-  Tokenizer() = default;
+  Tokenizer(const std::string &template_str = "")
+      : m_chatml_tmpl_(template_str.empty() ? chatml_template() : template_str, "", "") {}
   ~Tokenizer() = default;
 
   // -------------------------------------------------------------------------
@@ -89,8 +92,14 @@ class Tokenizer {
    * @param texts Vector of input texts.
    * @return std::vector<std::vector<int32_t>> Batch of token ID sequences.
    */
-  auto EncodeBatch(const std::vector<std::string> &texts) const -> std::vector<std::vector<int32_t>> {
-    return m_tokenizer_->EncodeBatch(texts);
+  auto EncodeBatch(const std::vector<UserMsg> &user_msgs) const -> std::vector<std::vector<int32_t>> {
+    std::vector<std::vector<int32_t>> ids;
+    ids.reserve(user_msgs.size());
+    for (auto &msg : user_msgs) {
+      auto chatml_msg = this->ToChatml(msg);
+      ids.push_back(this->Encode(chatml_msg));
+    }
+    return ids;
   }
 
   /**
@@ -99,7 +108,12 @@ class Tokenizer {
    * @param ids Sequence of token IDs.
    * @return std::string Decoded text.
    */
-  auto Decode(const std::vector<int32_t> &ids) const -> std::string { return m_tokenizer_->Decode(ids); }
+  auto Decode(const std::vector<int32_t> &ids) const -> std::string {
+    if (ids.empty()) {
+      return "";
+    }
+    return m_tokenizer_->Decode(ids);
+  }
 
   /**
    * @brief Decodes a batch of token ID sequences.
@@ -124,6 +138,31 @@ class Tokenizer {
   auto Empty() const -> bool { return nullptr == m_tokenizer_; }
 
  private:
+  auto ToChatml(const UserMsg &message, bool add_generation_prompt = true) const -> std::string {
+    nlohmann::json messages_json = nlohmann::json::array();
+    messages_json.push_back({{"role", message.UserRole()}, {"content", message.InputMsg()}});
+
+    minja::chat_template_inputs inputs;
+    inputs.messages = messages_json;
+
+    try {
+      return m_chatml_tmpl_.apply(inputs);
+    } catch (const std::exception &e) {
+      return "";
+    }
+  }
+
+ private:
+  inline static auto chatml_template() -> std::string {
+    return R"(
+{%- for message in messages %}<|im_start|>{{ message.role }}
+{{ message.content }}<|im_end|>
+{% endfor %}
+{% if add_generation_prompt %}<|im_start|>assistant
+{% endif %})";
+  }
+
+  minja::chat_template m_chatml_tmpl_;
   std::unique_ptr<tokenizers::Tokenizer> m_tokenizer_{nullptr};  ///< Underlying tokenizer instance.
 };
 
@@ -176,7 +215,11 @@ inline auto FromBlobRWKVWorld(const std::string &model_blob) -> std::unique_ptr<
  * @param tokenizer_json Byte string containing the JSON tokenizer definition.
  * @return std::unique_ptr<Tokenizer> A new Tokenizer instance.
  */
-inline auto FromBlobJSON(const std::string &tokenizer_json) -> std::unique_ptr<Tokenizer> {
+inline auto FromJSON(const std::string &tokenizer_json_file) -> std::unique_ptr<Tokenizer> {
+  auto tokenizer_json = util::LoadBytesFromFile(tokenizer_json_file);
+  if (tokenizer_json.empty()) {
+    return nullptr;
+  }
   auto tokenizer = std::make_unique<Tokenizer>();
   tokenizer->FromBlobJSON(tokenizer_json);
   return tokenizer;

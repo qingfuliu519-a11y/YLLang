@@ -3,6 +3,7 @@ message(STATUS "Enable test module.")
 
 set(TEST_SOURCE
         "${CMAKE_SOURCE_DIR}/test/mha_kvcache_test.cpp"
+        "${CMAKE_SOURCE_DIR}/test/tokenizer_test.cpp"
 )
 
 foreach (filename IN LISTS TEST_SOURCE)
@@ -18,6 +19,7 @@ foreach (filename IN LISTS TEST_SOURCE)
             ${TORCH_INSTALL_DIR}/include
             ${TORCH_INSTALL_DIR}/include/torch/csrc/api/include
             ${CMAKE_SOURCE_DIR}/src/include
+            ${THIRD_PARTY_INCLUDE_DIRS}
     )
 
     target_link_libraries(${target}
@@ -25,6 +27,7 @@ foreach (filename IN LISTS TEST_SOURCE)
             ${TORCH_LIBRARIES}
             CUDA::cudart
             YLLANG_Lib
+            minja
     )
 
     set_target_properties(${target} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)

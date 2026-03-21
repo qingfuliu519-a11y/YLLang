@@ -2,11 +2,14 @@
 #define YLLANG_ENGINE_H_
 
 #include <torch/torch.h>
+#include "models/model.h"
 #include "request/request.h"
 #include "tokenizer/tokenizer.h"
 namespace yllang {
 class Engine {
  public:
+  Engine(ModelType type);
+
  protected:
   auto Tokenize(const std::unique_ptr<UserMsg> &user_msg) const -> torch::Tensor;
 

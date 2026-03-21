@@ -43,7 +43,7 @@ add_subdirectory(src)
 # Define the executable
 add_executable(YLLANG "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
 # Link Torch libraries and YLLANG_Lib (the latter is defined in src/)
-target_link_libraries(YLLANG PRIVATE ${TORCH_LIBRARIES} CUDA::cudart YLLANG_Lib)
+target_link_libraries(YLLANG PRIVATE ${TORCH_LIBRARIES} CUDA::cudart YLLANG_Lib minja)
 
 target_include_directories(
         YLLANG
@@ -51,8 +51,7 @@ target_include_directories(
         ${TORCH_INSTALL_DIR}/include
         ${TORCH_INSTALL_DIR}/include/torch/csrc/api/include
         ${CMAKE_SOURCE_DIR}/src/include
-        ${THIRD_PARTY_INCLUDE_DIRS}
-        ${TOKENZIER_CPP_INCLUDE_DIRS})
+        ${THIRD_PARTY_INCLUDE_DIRS})
 
 set_target_properties(YLLANG PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 

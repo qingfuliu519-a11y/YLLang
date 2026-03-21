@@ -16,7 +16,7 @@ set(YLLang_SOURCE_FILES
 add_library(YLLANG_Lib ${YLLang_SOURCE_FILES})
 
 # Link Torch libraries and CUDA runtime
-target_link_libraries(YLLANG_Lib PRIVATE ${TORCH_LIBRARIES} CUDA::cudart tokenizers_cpp CURL::libcurl)
+target_link_libraries(YLLANG_Lib PRIVATE ${TORCH_LIBRARIES} CUDA::cudart tokenizers_cpp CURL::libcurl minja)
 
 # Enable separable compilation for CUDA
 set_target_properties(YLLANG_Lib PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
@@ -28,5 +28,4 @@ target_include_directories(
         ${TORCH_INSTALL_DIR}/include
         ${TORCH_INSTALL_DIR}/include/torch/csrc/api/include
         ${CMAKE_SOURCE_DIR}/src/include
-        ${THIRD_PARTY_INCLUDE_DIRS}
-        ${TOKENZIER_CPP_INCLUDE_DIRS})
+        ${THIRD_PARTY_INCLUDE_DIRS})

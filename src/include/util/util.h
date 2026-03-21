@@ -25,11 +25,10 @@ class BaseRef {
 
 namespace util {
 
-auto LoadBytesFromFile(const std::string &path) -> std::string {
+inline auto LoadBytesFromFile(const std::string &path) -> std::string {
   std::ifstream fs(path, std::ios::in | std::ios::binary);
   if (fs.fail()) {
-    std::cerr << "Cannot open " << path << std::endl;
-    exit(1);
+    return "";
   }
   std::string data;
   fs.seekg(0, std::ios::end);
