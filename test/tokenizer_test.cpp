@@ -236,7 +236,8 @@ auto TestTokenizerEdgeCases(const std::string &tokenizer_json_path) -> void {
  */
 auto main(int argc, char *argv[]) -> int {
   std::string tokenizer_path = "./tokenizer.json";
-  std::string test_data_path = yllang::kModelPath + yllang::ModelTypeToString(yllang::ModelType::KQwen306b) + "/tokenized_results.json";
+  std::string test_data_path =
+      yllang::kModelPath + yllang::ModelTypeToString(yllang::ModelType::KQwen306b) + "/tokenized_results.json";
 
   std::cout << "Running Tokenizer unit tests...\n";
 

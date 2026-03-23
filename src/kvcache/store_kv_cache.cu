@@ -1,6 +1,3 @@
-#ifndef YLLANG_KVCACHE_STORE_KV_CACHE_CUH
-#define YLLANG_KVCACHE_STORE_KV_CACHE_CUH
-
 // Standard headers
 #include <concepts>
 #include <cstdint>
@@ -95,7 +92,7 @@ __global__ auto StoreKVCacheKernel(const __grid_constant__ StoreKernelParams par
  * @param v_cache            V cache tensor
  * @param indices            Indices tensor
  */
-template <size_t kElementSize, size_t kThreadsPreBlock = 128, bool kUsePDL = false>
+template <size_t kElementSize, size_t kThreadsPreBlock, bool kUsePDL>
 auto StoreKVCache(const torch::Tensor &k, const torch::Tensor &v, const torch::Tensor &k_cache,
                   const torch::Tensor &v_cache, const torch::Tensor &indices) -> void {
   // Symbolic variables used to match tensor shapes and attributes (defined in util/tensor.h)
@@ -168,5 +165,3 @@ auto StoreKVCache(const torch::Tensor &k, const torch::Tensor &v, const torch::T
 template auto StoreKVCache<kElementSize>(const torch::Tensor &, const torch::Tensor &, const torch::Tensor &,
                                          const torch::Tensor &, const torch::Tensor &) -> void;
 }  // namespace yllang
-
-#endif  // YLLANG_KVCACHE_STORE_KV_CACHE_CUH

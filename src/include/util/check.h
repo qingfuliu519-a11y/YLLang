@@ -1,7 +1,9 @@
 #ifndef YLLANG_CUDA_UTIL_H_
 #define YLLANG_CUDA_UTIL_H_
+#include <cuda_runtime.h>
 #include "util/panic.h"
 #include "util/source_location.h"
+
 namespace yllang {
 
 auto inline CudaCheck(cudaError_t error, const yllang::SourceLocation &location = yllang::SourceLocation::Current())

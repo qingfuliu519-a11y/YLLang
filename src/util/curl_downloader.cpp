@@ -2,6 +2,7 @@
 #include <curl/curl.h>
 #include <chrono>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -183,7 +184,60 @@ static auto ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlnow
   return 0;
 }
 
+static auto GetRemoteFileSize(const std::string &url) -> int64_t {
+  CURL *curl = curl_easy_init();
+  if (nullptr == curl) {
+    return -1;
+  }
+
+  curl_off_t content_length;
+
+  curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+  curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+  curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 10L);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
+  curl_easy_setopt(
+      curl, CURLOPT_USERAGENT,
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+  curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+  curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+  curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
+  CURLcode res = curl_easy_perform(curl);
+  if (res == CURLE_OK) {
+    curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &content_length);
+  }
+
+  curl_easy_cleanup(curl);
+
+  return static_cast<int64_t>(content_length);
+}
+
 auto CurlDownloader::Download(const std::string &url, const std::string &output_path) -> bool {
+  namespace fs = std::filesystem;
+
+  if (fs::exists(output_path)) {
+    auto local_size = fs::file_size(output_path);
+    if (local_size > 0) {
+      int64_t remote_size = GetRemoteFileSize(url);
+      if (remote_size > 0 && local_size == remote_size) {
+        std::cout << "File already fully downloaded: " << output_path << " (" << FormatSize(local_size) << ")\n";
+        return true;
+      }
+      if (remote_size > 0) {
+        std::cout << "Size mismatch (local " << FormatSize(local_size) << " vs remote " << FormatSize(remote_size)
+                  << "), re-downloading: " << output_path << "\n";
+        fs::remove(output_path);
+      } else {
+        std::cout << "Unable to verify remote size, re-downloading: " << output_path << "\n";
+        fs::remove(output_path);
+      }
+    } else {
+      std::cout << "Local file is empty, re-downloading: " << output_path << "\n";
+    }
+  }
+
   CURL *curl = curl_easy_init();
   if (nullptr == curl) {
     return false;
@@ -203,6 +257,7 @@ auto CurlDownloader::Download(const std::string &url, const std::string &output_
   ProgressInfo progress_info{
       filename, &std::cout, std::chrono::steady_clock::now(), std::chrono::steady_clock::now(), 0, true, 0};
 
+  // Common libcurl options
   curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteDataCallback);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &outfile);
@@ -211,28 +266,10 @@ auto CurlDownloader::Download(const std::string &url, const std::string &output_
   curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 10L);
   curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (compatible; MyDownloader/1.0)");
   curl_easy_setopt(curl, CURLOPT_VERBOSE, 0L);
-
   curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
-
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
   curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
-
-  const char *http_proxy = std::getenv("HTTP_PROXY");
-  const char *https_proxy = std::getenv("HTTPS_PROXY");
-  if (nullptr != https_proxy && https_proxy[0] != '\0') {
-    curl_easy_setopt(curl, CURLOPT_PROXY, https_proxy);
-  } else if (nullptr != http_proxy && http_proxy[0] != '\0') {
-    curl_easy_setopt(curl, CURLOPT_PROXY, http_proxy);
-  }
-
-  struct curl_slist *headers = nullptr;
-  const char *hf_token = std::getenv("HF_TOKEN");
-  if (nullptr != hf_token && hf_token[0] != '\0') {
-    std::string auth_header = "Authorization: Bearer " + std::string(hf_token);
-    headers = curl_slist_append(headers, auth_header.c_str());
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-  }
 
   curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
   curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, ProgressCallback);
@@ -243,31 +280,35 @@ auto CurlDownloader::Download(const std::string &url, const std::string &output_
   int64_t http_code = 0;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 
-  if (res == CURLE_OK) {
-    if (http_code == 200) {
-      success = true;
-      std::cout << "\r\033[32m✓\033[0m " << filename << ": Download completed (\033[32m"
-                << FormatSize(progress_info.m_last_dlnow_) << "\033[0m)  \n";
-    } else {
-      std::cerr << "\n\033[31mHTTP error: " << http_code << "\033[0m\n";
-    }
+  if (res == CURLE_OK && http_code == 200) {
+    success = true;
+    std::cout << "\r\033[32m✓\033[0m " << filename << ": Download completed (\033[32m"
+              << FormatSize(progress_info.m_last_dlnow_) << "\033[0m)  \n";
   } else {
-    std::cerr << "\n\033[31mcurl error: " << curl_easy_strerror(res) << "\033[0m\n";
-    if (http_code > 0) {
-      std::cerr << "HTTP status code: " << http_code << std::endl;
+    std::cerr << "\n\033[31m";
+    if (res != CURLE_OK) {
+      std::cerr << "curl error: " << curl_easy_strerror(res);
+      if (http_code > 0) {
+        std::cerr << " (HTTP " << http_code << ")";
+      }
+    } else if (http_code != 200) {
+      std::cerr << "HTTP error: " << http_code;
     }
+    std::cerr << "\033[0m\n";
+
     if (res == CURLE_SSL_CONNECT_ERROR || res == CURLE_SSL_CERTPROBLEM || res == CURLE_SSL_CIPHER ||
         res == CURLE_SSL_ENGINE_SETFAILED) {
-      std::cerr << "\033[33mTLS/SSL 握手失败。可能原因：网络代理、证书问题或 TLS 版本不兼容。"
-                << "请检查代理设置或尝试禁用证书验证（测试用）。\033[0m\n";
+      std::cerr << "\033[33mTLS/SSL handshake failed. Possible causes: proxy, certificate, or TLS version.\033[0m\n";
     }
   }
 
-  if (nullptr != headers) {
-    curl_slist_free_all(headers);
-  }
   outfile.close();
   curl_easy_cleanup(curl);
+
+  if (!success && fs::exists(output_path)) {
+    fs::remove(output_path);
+  }
+
   return success;
 }
 

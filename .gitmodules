@@ -10,3 +10,6 @@
 [submodule "3rdparty/minja"]
 	path = 3rdparty/minja
 	url = https://github.com/ochafik/minja.git
+[submodule "3rdparty/safetensors-cpp"]
+	path = 3rdparty/safetensors-cpp
+	url = https://github.com/syoyo/safetensors-cpp.git

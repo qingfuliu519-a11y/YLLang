@@ -5,6 +5,7 @@
 #include "kvcache/radix_tree.h"
 #include "layers/linear.h"
 #include "layers/rms_norm.h"
+#include "layers/vocab_embedding_layer.h"
 #include "models/model.h"
 #include "models/qwen3.h"
 #include "request/request.h"

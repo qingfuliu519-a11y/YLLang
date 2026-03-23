@@ -28,7 +28,10 @@ foreach (filename IN LISTS TEST_SOURCE)
             CUDA::cudart
             YLLANG_Lib
             minja
+            safetensors_cpp
     )
 
     set_target_properties(${target} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+    target_compile_options(${target} PRIVATE -fexceptions)
 endforeach ()

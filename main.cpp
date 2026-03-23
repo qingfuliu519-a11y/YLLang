@@ -2,7 +2,8 @@
 #include <torch/torch.h>
 #include <iostream>
 #include <random>
-#include "models/model.h"
+#include "models/qwen3.h"
+#include "models/model_loader.h"
 
 void TestLibtorchVersion() {
   if (torch::cuda::cudnn_is_available()) {
@@ -32,6 +33,6 @@ auto RandomLoc(int batch_size, int seq_len, int num_pages, torch::Device device)
 }
 
 auto main(int p, char **v) -> int {
-  // yllang::Model::Load(yllang::ModelType::KQwen306b);
+  yllang::ModelLoader::Load(yllang::ModelType::KQwen306b);
   return 0;
 }

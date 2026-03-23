@@ -47,6 +47,11 @@ class LinearLayer : public BaseLayer {
   torch::nn::Linear m_wight_;  ///< Underlying linear module.
 };
 
+class QKVLinearLayer {
+ public:
+  QKVLinearLayer(int hidden_size, int num_qo_heads, int num_kv_heads, int head_dim);
+};
+
 }  // namespace yllang
 
 #endif  // YLLANG_LAYERS_LINEAR_LAYER_H

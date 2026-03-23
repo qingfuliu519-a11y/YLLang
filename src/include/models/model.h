@@ -7,6 +7,7 @@
 #include <vector>
 #include "batch/batch.h"
 #include "tokenizer/tokenizer.h"
+
 namespace yllang {
 
 enum class ModelType : std::uint8_t { KNone = 0, KQwen306b = 0 };
@@ -32,8 +33,6 @@ using ModelFileEntry = std::pair<std::string, std::string>;
 class Model {
  public:
   virtual ~Model() = default;
-
-  static auto Load(ModelType model_type) -> std::unique_ptr<Model>;
 
   /**
    * @brief Returns the list of files to download for a given model type.

@@ -4,9 +4,17 @@
 #include <utility>
 #include <vector>
 #include "config/config.h"
+#include "models/model_weight_context.h"
 #include "util/curl_downloader.h"
 
 namespace yllang {
+
+Qwen3::Qwen3(const std::string &model_path, const std::string &config_path) {
+  ModelWeightContext model_wright_context{model_path};
+  ModelConfig model_config{config_path};
+
+  m_vocab_embedding_layer_ = std::make_unique<VocabEmbeddingLayer>(model_config.VocabSize(), model_config.HiddenSize());
+}
 
 auto Qwen3::ModelFiles() -> std::vector<ModelFileEntry> {
   std::string base_url = "https://hf-mirror.com/Qwen/Qwen3-0.6B-Base/resolve/main/";
@@ -47,7 +55,7 @@ auto Qwen3::Load() -> std::unique_ptr<Model> {
 
   // After downloading, construct and return a Model object.
   // Actual construction should load the downloaded files as needed.
-  auto model = std::make_unique<Qwen3>();
+  auto model = std::make_unique<Qwen3>(model_dir + files[2].second, model_dir + files[4].second);
   return model;
 }
 

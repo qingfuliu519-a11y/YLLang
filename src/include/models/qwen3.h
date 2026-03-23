@@ -2,9 +2,10 @@
 #define YLLANG_MODEL_QWEN3_H
 
 #include <memory>
+#include "layers/vocab_embedding_layer.h"
 #include "models/model.h"
+#include "models/model_config.h"
 #include "models/model_loader.h"
-
 namespace yllang {
 
 class Qwen3 : public Model {
@@ -12,6 +13,8 @@ class Qwen3 : public Model {
   Qwen3() = default;
 
   ~Qwen3() override = default;
+
+  Qwen3(const std::string &model_path, const std::string &config_path);
 
   /**
    * @brief Returns the list of files to download for a given model type.
@@ -31,7 +34,8 @@ class Qwen3 : public Model {
   auto Forward(const std::shared_ptr<yllang::Batch> &batch) -> torch::Tensor override { return {}; }
 
  private:
-  inline static RegisterHelper<Qwen3> m_register_helper_;
+  std::unique_ptr<VocabEmbeddingLayer> m_vocab_embedding_layer_;
+  inline static RegisterHelper<Qwen3> qwen3_registrar = {};
 };
 
 }  // namespace yllang
