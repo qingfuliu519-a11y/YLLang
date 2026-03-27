@@ -14,10 +14,10 @@
 #include <span>
 #include "c10/core/Device.h"
 #include "c10/util/typeid.h"
+#include "safetensors.hh"
 #include "tensor.h"
 #include "util/panic.h"
 #include "util/util.h"
-
 namespace yllang {
 
 /**
@@ -406,6 +406,67 @@ class TensorMatcher {
   yllang::SymbolicDTypeRef m_dtype_{};                  ///< Expected dtype (optional).
   yllang::SymbolicDeviceRef m_device_{};                ///< Expected device (optional).
 };
+
+namespace util {
+
+inline auto SafetensorsType2TorchType(safetensors::dtype dtype) -> torch::ScalarType {
+  switch (dtype) {
+    case safetensors::dtype::kFLOAT32:
+      return torch::kFloat32;
+    case safetensors::dtype::kFLOAT64:
+      return torch::kFloat64;
+    case safetensors::dtype::kFLOAT16:
+      return torch::kFloat16;
+    case safetensors::dtype::kBFLOAT16:
+      return torch::kBFloat16;
+    case safetensors::dtype::kINT8:
+      return torch::kInt8;
+    case safetensors::dtype::kINT16:
+      return torch::kInt16;
+    case safetensors::dtype::kINT32:
+      return torch::kInt32;
+    case safetensors::dtype::kINT64:
+      return torch::kInt64;
+    case safetensors::dtype::kUINT8:
+      return torch::kUInt8;
+    case safetensors::dtype::kBOOL:
+      return torch::kBool;
+    default:
+      throw std::runtime_error("Unsupported dtype");
+  }
+}
+
+inline auto ParseTorchDtype(const std::string &dtype_str) -> torch::ScalarType {
+  static const std::unordered_map<std::string, torch::ScalarType> dtype_map = {
+      {"float32", torch::kFloat32}, {"float16", torch::kFloat16}, {"bfloat16", torch::kBFloat16},
+      {"float64", torch::kFloat64}, {"int8", torch::kInt8},       {"int16", torch::kInt16},
+      {"int32", torch::kInt32},     {"int64", torch::kInt64},     {"uint8", torch::kUInt8},
+      {"bool", torch::kBool},
+  };
+
+  auto it = dtype_map.find(dtype_str);
+  if (it != dtype_map.end()) {
+    return it->second;
+  }
+  throw std::runtime_error("Unsupported dtype str");
+}
+
+/**
+ * @brief Copies data from src tensor to dst tensor after verifying shape and dtype.
+ *
+ * @param dst Target tensor (will be overwritten with src data)
+ * @param src Source tensor (must have same shape and dtype as dst)
+ *
+ * @throws c10::Error via TORCH_CHECK if shape or dtype mismatch.
+ */
+inline auto CopyTensorWithCheck(torch::Tensor &dst, const torch::Tensor &src) -> void {
+  TORCH_CHECK(dst.sizes() == src.sizes(), "Tensor shape mismatch. Expected ", dst.sizes(), ", got ", src.sizes());
+  TORCH_CHECK(dst.scalar_type() == src.scalar_type(), "Tensor dtype mismatch. Expected ", dst.scalar_type(), ", got ",
+              src.scalar_type());
+  dst.copy_(src);
+}
+
+}  // namespace util
 
 }  // namespace yllang
 

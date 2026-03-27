@@ -5,7 +5,9 @@ find_package(CURL REQUIRED)
 # Collect source files (recursively) for the YLLANG library
 set(YLLang_SOURCE_FILES
         "${CMAKE_SOURCE_DIR}/src/layers/base_layer.cpp"
+        "${CMAKE_SOURCE_DIR}/src/layers/rsm_norm.cu"
         "${CMAKE_SOURCE_DIR}/src/layers/index.cu"
+        "${CMAKE_SOURCE_DIR}/src/layers/silu_and_mul.cu"
         "${CMAKE_SOURCE_DIR}/src/kvcache/store_kv_cache.cu"
         "${CMAKE_SOURCE_DIR}/src/models/model_config.cpp"
         "${CMAKE_SOURCE_DIR}/src/models/model.cpp"

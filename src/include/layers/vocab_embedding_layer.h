@@ -28,8 +28,8 @@ class VocabEmbeddingLayer : public BaseLayer {
    * @param vocab_size    Size of the vocabulary (number of distinct tokens).
    * @param embedding_dim Dimension of the output embedding vectors.
    */
-  VocabEmbeddingLayer(int vocab_size, int embedding_dim)
-      : m_weights_(torch::empty({vocab_size, embedding_dim})), m_embedding_dim_(embedding_dim) {}
+  VocabEmbeddingLayer(int vocab_size, int embedding_dim, torch::ScalarType dtype)
+      : m_weights_(torch::empty({vocab_size, embedding_dim}, dtype)), m_embedding_dim_(embedding_dim) {}
 
   /**
    * @brief Forward pass: retrieves embeddings for the given token indices.
@@ -42,6 +42,14 @@ class VocabEmbeddingLayer : public BaseLayer {
     torch::Tensor output = torch::empty({indices.size(0), m_embedding_dim_});
     Index<kElementSize>(indices, m_weights_, output);
     return output;
+  }
+
+  auto SetWeights(torch::Tensor weights) -> void override {
+    TORCH_CHECK(m_weights_.sizes() == weights.sizes(), "Tensor shape mismatch. Expected ", m_weights_.sizes(), ", got ",
+                weights.sizes());
+    TORCH_CHECK(m_weights_.scalar_type() == weights.scalar_type(), "Tensor dtype mismatch. Expected ",
+                m_weights_.scalar_type(), ", got ", weights.scalar_type());
+    m_weights_.copy_(weights);
   }
 
  private:

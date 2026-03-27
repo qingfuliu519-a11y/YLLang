@@ -48,11 +48,6 @@ class Model {
   static auto Kind() -> ModelType { return ModelType::KNone; }
 
   virtual auto Forward(const std::shared_ptr<yllang::Batch> &batch) -> torch::Tensor = 0;
-
- protected:
-  auto Tokenize(const std::shared_ptr<yllang::Batch> &batch);
-
- protected:
 };
 }  // namespace yllang
 

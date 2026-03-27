@@ -1,5 +1,5 @@
 #include "models/model_config.h"
-
+#include "util/tensor.h"
 namespace yllang {
 
 ModelConfig::ModelConfig(const std::string &filename) {
@@ -42,7 +42,8 @@ ModelConfig::ModelConfig(const std::string &filename) {
     m_sliding_window_ = "";
   }
   m_tie_word_embeddings_ = j.value("tie_word_embeddings", false);
-  m_torch_dtype_ = j.value("torch_dtype", "");
+  m_torch_dtype_str_ = j.value("torch_dtype", "");
+  m_torch_dtype_ = util::ParseTorchDtype(m_torch_dtype_str_);
   m_transformers_version_ = j.value("transformers_version", "");
   m_use_cache_ = j.value("use_cache", false);
   m_use_sliding_window_ = j.value("use_sliding_window", false);

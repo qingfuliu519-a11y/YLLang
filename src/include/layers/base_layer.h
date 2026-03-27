@@ -5,8 +5,9 @@
 
 #ifndef YLLANG_LAYERS_BASE_LAYER_H
 #define YLLANG_LAYERS_BASE_LAYER_H
-
 #include <torch/torch.h>
+#include <stdexcept>
+#include "layers/weight_loader.h"
 
 namespace yllang {
 
@@ -26,7 +27,21 @@ class BaseLayer {
    * @param tensor Input tensor.
    * @return torch::Tensor Output tensor after layer computation.
    */
-  virtual auto Forward(const torch::Tensor &tensor) -> torch::Tensor = 0;
+  virtual auto Forward(const torch::Tensor &tensor) -> torch::Tensor {
+    throw std::runtime_error("should not come here");
+  }
+
+  virtual auto Forward(const torch::Tensor &tensor, const torch::Tensor &residual)
+      -> std::pair<torch::Tensor, torch::Tensor> {
+    throw std::runtime_error("should not come here");
+  }
+
+  virtual auto SetWeights(torch::Tensor weights) -> void = 0;
+
+  virtual auto SetWeights(WeightLoader &loader) -> void {
+    SetWeights(loader.Weights());
+    loader.CompleteLayerLoad();
+  }
 };
 
 }  // namespace yllang

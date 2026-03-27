@@ -34,7 +34,7 @@ class Qwen3 : public Model {
   auto Forward(const std::shared_ptr<yllang::Batch> &batch) -> torch::Tensor override { return {}; }
 
  private:
-  std::unique_ptr<VocabEmbeddingLayer> m_vocab_embedding_layer_;
+  std::unique_ptr<BaseLayer> m_vocab_embedding_layer_;
   inline static RegisterHelper<Qwen3> qwen3_registrar = {};
 };
 

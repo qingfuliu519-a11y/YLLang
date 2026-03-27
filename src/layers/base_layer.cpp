@@ -3,6 +3,7 @@
 #include "engine/engine.h"
 #include "kvcache/cache_manager.h"
 #include "kvcache/radix_tree.h"
+#include "layers/gate_mlp_layer.h"
 #include "layers/linear.h"
 #include "layers/rms_norm.h"
 #include "layers/vocab_embedding_layer.h"

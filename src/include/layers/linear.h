@@ -8,7 +8,7 @@
 
 #include <torch/torch.h>
 #include "layers/base_layer.h"
-
+#include "util/tensor.h"
 namespace yllang {
 
 /**
@@ -30,11 +30,22 @@ class LinearLayer : public BaseLayer {
    * @param output_dim Number of output features.
    * @param bias       Whether to include a bias term.
    */
-  LinearLayer(int input_dim, int output_dim, bool bias)
-      : m_wight_(torch::nn::LinearOptions(input_dim, output_dim).bias(bias)) {}
+  LinearLayer(int input_dim, int output_dim, bool bias, torch::ScalarType dtype)
+      : m_wight_(torch::nn::LinearOptions(input_dim, output_dim).bias(bias)) {
+    m_wight_->weight = m_wight_->weight.toType(dtype);
+    m_wight_->bias = m_wight_->bias.toType(dtype);
+  }
 
   ~LinearLayer() override = default;
 
+  auto SetWeights(torch::Tensor weights) -> void { throw std::runtime_error("should not come here"); }
+
+  auto SetWeights(WeightLoader &loader) -> void override {
+    util::CopyTensorWithCheck(m_wight_->weight, loader.Weights());
+    loader.CompleteLayerLoad();
+    util::CopyTensorWithCheck(m_wight_->bias, loader.Weights());
+    loader.CompleteLayerLoad();
+  }
   /**
    * @brief Forward pass: applies the linear transformation.
    *
@@ -43,13 +54,23 @@ class LinearLayer : public BaseLayer {
    */
   auto Forward(const torch::Tensor &tensor) -> torch::Tensor override { return m_wight_(tensor); }
 
- private:
+ protected:
   torch::nn::Linear m_wight_;  ///< Underlying linear module.
 };
 
-class QKVLinearLayer {
+class QKVLinearLayer : public LinearLayer {
  public:
-  QKVLinearLayer(int hidden_size, int num_qo_heads, int num_kv_heads, int head_dim);
+  QKVLinearLayer(int hidden_size, int num_qo_heads, int num_kv_heads, int head_dim, bool bias, torch::ScalarType dtype)
+      : LinearLayer(hidden_size, (num_qo_heads + 2 * num_kv_heads) * head_dim, bias, dtype) {}
+
+  auto SetWeights(torch::Tensor weights) -> void { throw std::runtime_error("should not come here"); }
+
+  auto SetWeights(WeightLoader &loader) -> void override {
+    util::CopyTensorWithCheck(m_wight_->weight, loader.Weights());
+    loader.CompleteLayerLoad();
+    util::CopyTensorWithCheck(m_wight_->bias, loader.Weights());
+    loader.CompleteLayerLoad();
+  }
 };
 
 }  // namespace yllang

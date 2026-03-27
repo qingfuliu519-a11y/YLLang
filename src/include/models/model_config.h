@@ -6,6 +6,7 @@
 #ifndef YLLANG_CONFIG_MODEL_CONFIG_H
 #define YLLANG_CONFIG_MODEL_CONFIG_H
 
+#include <torch/torch.h>
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -94,7 +95,10 @@ class ModelConfig {
   auto TieWordEmbeddings() const -> bool { return m_tie_word_embeddings_; }
 
   /// Returns the torch data type (e.g., "float16", "bfloat16").
-  auto TorchDtype() const -> const std::string & { return m_torch_dtype_; }
+  auto DtypeStr() const -> const std::string & { return m_torch_dtype_str_; }
+
+  /// Returns the torch data type as a torch::ScalarType enum.
+  auto TorchDtype() const -> torch::ScalarType { return m_torch_dtype_; }
 
   /// Returns the transformers library version that generated this config.
   auto TransformersVersion() const -> const std::string & { return m_transformers_version_; }
@@ -130,11 +134,12 @@ class ModelConfig {
   double m_rope_theta_;                       ///< RoPE base theta.
   std::string m_sliding_window_;              ///< Sliding window configuration.
   bool m_tie_word_embeddings_;                ///< Whether embeddings are tied.
-  std::string m_torch_dtype_;                 ///< Torch data type.
-  std::string m_transformers_version_;        ///< Transformers library version.
-  bool m_use_cache_;                          ///< Whether KV cache is used.
-  bool m_use_sliding_window_;                 ///< Whether sliding window is used.
-  int m_vocab_size_;                          ///< Vocabulary size.
+  std::string m_torch_dtype_str_;             ///< Torch data type.
+  torch::ScalarType m_torch_dtype_;
+  std::string m_transformers_version_;  ///< Transformers library version.
+  bool m_use_cache_;                    ///< Whether KV cache is used.
+  bool m_use_sliding_window_;           ///< Whether sliding window is used.
+  int m_vocab_size_;                    ///< Vocabulary size.
 };
 
 }  // namespace yllang

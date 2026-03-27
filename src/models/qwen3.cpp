@@ -4,16 +4,18 @@
 #include <utility>
 #include <vector>
 #include "config/config.h"
-#include "models/model_weight_context.h"
+#include "layers/weight_loader.h"
 #include "util/curl_downloader.h"
 
 namespace yllang {
 
 Qwen3::Qwen3(const std::string &model_path, const std::string &config_path) {
-  ModelWeightContext model_wright_context{model_path};
+  WeightLoader weight_loader{model_path};
   ModelConfig model_config{config_path};
 
-  m_vocab_embedding_layer_ = std::make_unique<VocabEmbeddingLayer>(model_config.VocabSize(), model_config.HiddenSize());
+  m_vocab_embedding_layer_ = std::make_unique<VocabEmbeddingLayer>(model_config.VocabSize(), model_config.HiddenSize(),
+                                                                   model_config.TorchDtype());
+  m_vocab_embedding_layer_->SetWeights(weight_loader);
 }
 
 auto Qwen3::ModelFiles() -> std::vector<ModelFileEntry> {
@@ -46,12 +48,12 @@ auto Qwen3::Load() -> std::unique_ptr<Model> {
   }
 
   // Download each file sequentially.
-  for (const auto &[remote_url, local_name] : files) {
-    std::string local_path = model_dir + local_name;
-    if (!util::CurlDownloader::Download(remote_url, local_path)) {
-      return nullptr;  // Download failed.
-    }
-  }
+  // for (const auto &[remote_url, local_name] : files) {
+  //   std::string local_path = model_dir + local_name;
+  //   if (!util::CurlDownloader::Download(remote_url, local_path)) {
+  //     return nullptr;  // Download failed.
+  //   }
+  // }
 
   // After downloading, construct and return a Model object.
   // Actual construction should load the downloaded files as needed.
